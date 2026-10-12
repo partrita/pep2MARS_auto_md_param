@@ -11,19 +11,26 @@ from pathlib import Path
 script_dir = Path(__file__).resolve().parent
 print(script_dir)
 
-# need to adjust the module path
-if  '192.168' in socket.gethostname():
-    module_py = '/opt/homebrew/Cellar/lmod/9.2/init/env_modules_python.py'
-    ambertool = 'ambertools/24.0'
-else:
-    module_py = '/public/software/apps/module/init/python.py'
-    ambertool = 'amber/a22t23'
-exec(open(module_py).read())
-module('purge') # type: ignore
-module(f'load {ambertool}') #type: ignore
-module('list') # type: ignore
-# if you don't have Module/lmod, comment the about codes
-# and make sure Ambertools is globally installed
+# need to adjust the module path (optional / cluster environment)
+module_py = os.environ.get('MODULE_PY')
+if not module_py:
+    if '192.168' in socket.gethostname():
+        candidate = '/opt/homebrew/Cellar/lmod/9.2/init/env_modules_python.py'
+        if os.path.exists(candidate):
+            module_py = candidate
+    else:
+        candidate = '/public/software/apps/module/init/python.py'
+        if os.path.exists(candidate):
+            module_py = candidate
+
+if module_py and os.path.exists(module_py):
+    ambertool = 'ambertools/24.0' if '192.168' in socket.gethostname() else 'amber/a22t23'
+    exec(open(module_py).read())
+    module('purge') # type: ignore
+    module(f'load {ambertool}') #type: ignore
+    module('list') # type: ignore
+# if you don't have Module/lmod, make sure AmberTools is in PATH or installed in the environment
+
 
 def tleap_PP(receptor="full_st_nh_leap_ter.pdb",ff='ff14SB',leap_file=[],
              salt_num=0,wat_box='TIP3P',ligFF='gaff'):

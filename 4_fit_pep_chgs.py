@@ -12,11 +12,14 @@ import sys
 from pymol import cmd, stored
 #from prepare_pep_caps import guessing_charge
 
-# for debug
-exec(open('/public/software/apps/module/init/python.py').read())
-module('purge')
-module('load amber/a22t23 gaussian/16.c02')
-module('list')
+# for debug (optional / cluster environment)
+module_py = os.environ.get('MODULE_PY', '/public/software/apps/module/init/python.py')
+if os.path.exists(module_py):
+    exec(open(module_py).read())
+    module('purge')
+    module('load amber/a22t23 gaussian/16.c02')
+    module('list')
+
 
 global ACE, NME, AMBTYPE
 # covering more atom names from different source

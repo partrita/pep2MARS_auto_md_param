@@ -16,6 +16,8 @@ Usage:
     -b|-waterBox WATERBOX \\
     -c|-chargeType CHARGETYPE \\
     -s|-saltConc SALTCONC \\
+    [-q|-queue|-partition PARTITION] \\
+    [-l|-local] \\
     [-d|-scriptDir SCRIPTDIR]
 
 Example:
@@ -34,12 +36,14 @@ Options:
   -w, -workDir       Working directory
   -p, -pdbName       PDB file name
   -j, -jobName       Job name
-  -t, -jobTime       Job time
+  -t, -jobTime       Job time (hours, e.g. 24 or 1.5)
   -f, -forceField    Force field
   -T, -temper        Temperature
   -b, -waterBox      Water box
   -c, -chargeType    Charge type
   -s, -saltConc      Salt concentration
+  -q, -queue         Slurm partition (default: $SLURM_PARTITION or CPU_5318Y_96C if sbatch exists)
+  -l, -local         Run locally directly instead of submitting via sbatch
   -d, -scriptDir     Script directory
   -h, -help          Show this help message
 EOF
@@ -47,6 +51,9 @@ EOF
 
 scriptDir="${scriptDir:-$(dirname "$(realpath "$0")")}"
 [[ -z $1 ]] && usage && exit 0
+partition="${SLURM_PARTITION:-CPU_5318Y_96C}"
+run_local=0
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -w|-workDir) workDir="$2"; shift 2 ;;
@@ -58,6 +65,8 @@ while [[ $# -gt 0 ]]; do
     -b|-waterBox) waterBox="$2"; shift 2 ;;
     -c|-chargeType) chargeType="$2"; shift 2 ;;
     -s|-saltConc) saltConc="$2"; shift 2 ;;
+    -q|-queue|-partition) partition="$2"; shift 2 ;;
+    -l|-local) run_local=1; shift 1 ;;
     -d|-scriptDir) scriptDir="$2"; shift 2 ;;
     -h|-help) usage; exit 0 ;;
     *) echo "Error: unknown argument: $1" >&2; usage; exit 1 ;;
@@ -89,20 +98,22 @@ echo "temper=$temper"
 echo "waterBox=$waterBox"
 echo "chargeType=$chargeType"
 echo "saltConc=$saltConc"
+echo "partition=$partition"
+echo "runLocal=$run_local"
 echo "scriptDir=$scriptDir"
 
 ff=$(echo "$forceField" | cut -f2 -d'_')
 echo "ff=$ff"
 topDir=$PWD
-mkdir -p $workDir
+mkdir -p "$workDir"
 cd "$workDir"
 echo "forceField=$forceField"
 
 if [[ "$jobTime" =~ \. ]]; then
-  hours=10 # 10 hours for parameter fitting
-  minutes=$(echo "$jobTime" | awk '{printf "%d", $1*60}')
+  hours=$(echo "$jobTime" | awk '{printf "%d", int($1)}')
+  minutes=$(echo "$jobTime" | awk '{printf "%02d", int(($1 - int($1)) * 60)}')
 else
-  hours="$jobTime"
+  hours=$(printf "%d" "$jobTime")
   minutes="00"
 fi
 
@@ -119,23 +130,34 @@ cat > master_worker.sh <<_EOF
 # Use only 1 CPUs here, because ESP charge will be Sbatch
 # in build_system.py with 24 CPUs
 #SBATCH --job-name="prep_$jobName"
-#SBATCH -p CPU_5318Y_96C
+#SBATCH -p $partition
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -c 1
-#SBATCH -t $hours:$minutes:00
+#SBATCH -t ${hours}:${minutes}:00
 
-ml purge
-ml amber/a22t23
+if command -v ml &>/dev/null; then
+  ml purge || true
+  ml amber/a22t23 || true
+fi
+
 set -e
 
-echo Preparing the Amber prmtop and inpcrd files for $pdbName
+echo "Preparing the Amber prmtop and inpcrd files for $pdbName"
 
 $pyExec $scriptDir/1_build_system.py "$pdbName" "blank_string" \\
  "$chargeType" "$ff" "$temper" "$waterBox" "$jobTime" "$saltConc"
 
 _EOF
 
+chmod +x master_worker.sh
 
-sbatch master_worker.sh
-cd $topDir
+if [[ "$run_local" -eq 1 ]] || ! command -v sbatch &>/dev/null; then
+  echo "Running master_worker.sh locally (run_local=$run_local, sbatch available: $(command -v sbatch || echo 'no'))..."
+  bash master_worker.sh
+else
+  sbatch master_worker.sh
+fi
+
+cd "$topDir"
+

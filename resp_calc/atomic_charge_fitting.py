@@ -25,11 +25,15 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-exec(open('/public/software/apps/module/init/python.py').read())
-module('purge')
-module('load amber/a22t23 gaussian/16.c02')
-module('load mpi/openmpi/gnu/4.0.3 compiler/cuda/11.8')
-module('list')
+# Optional / cluster environment module initialization
+module_py = os.environ.get('MODULE_PY', '/public/software/apps/module/init/python.py')
+if os.path.exists(module_py):
+    exec(open(module_py).read())
+    module('purge')
+    module('load amber/a22t23 gaussian/16.c02')
+    module('load mpi/openmpi/gnu/4.0.3 compiler/cuda/11.8')
+    module('list')
+
 
 def read_par():
     # Set default values
