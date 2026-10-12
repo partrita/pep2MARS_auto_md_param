@@ -1,4 +1,4 @@
-#!/public/home/lijunhao/soft/conda_envs/fldev/bin/python
+#!/usr/bin/env python3
 import glob
 import os
 import subprocess

@@ -146,21 +146,43 @@ The workflow also expects the following tools to be installed and callable:
 
 ## Environment setup
 
-If you want to reproduce the original runtime layout as closely as possible, create both Conda environments:
+### Using Pixi (Recommended)
+
+This repository includes `pixi.toml` and `pixi.lock` configuring two environments:
+- `default`: includes packages from `fldev` (`rdkit`, `biopython`, `pandas`, `mdanalysis`, `pymol-open-source`, etc.)
+- `p4dev`: includes `psi4`, `resp`, `rdkit`, and Python 3.10 for quantum chemistry and RESP charge fitting.
+
+To install and initialize the environments:
+
+```bash
+# Install all environments
+pixi install --all
+```
+
+Run scripts directly via pixi:
+
+```bash
+# Run with default environment
+pixi run python 1_build_system.py ...
+
+# Run with p4dev environment
+pixi run -e p4dev python resp_calc/atomic_charge_fitting.py ...
+
+# Or use pre-configured tasks
+pixi run pep2mars -w /path/to/work -p protein.pdb ...
+```
+
+The shell scripts (`0_pep2mars.sh` and `3_PPmd_gp4.sh`) automatically detect and use the pixi environments located in `.pixi/envs/default` and `.pixi/envs/p4dev` if present.
+
+### Using Conda (Legacy)
+
+If you prefer using Conda:
 
 ```bash
 conda env create -f fldev.requirement.yml
 conda env create -f p4dev.requirement.yml
 ```
 
-After that, review the hard-coded paths and module names in the scripts before running anything on a new machine. In particular, the code contains environment-specific assumptions such as:
-
-- absolute Python interpreter paths in script shebangs,
-- absolute module-init paths,
-- hard-coded module names such as `amber/a22t23` and `gaussian/16.c02`,
-- cluster partition names such as `CPU_5318Y_96C`,
-- site-specific scratch locations,
-- direct calls to `/public/home/...` resources.
 
 ## How to run
 

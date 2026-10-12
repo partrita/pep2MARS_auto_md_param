@@ -25,12 +25,31 @@ echo "shifted args: $@"
 # Note that ${0%/*} requires a path, so, don't add it to $PATH
 scriptDir=${0%/*}
 
-if [[ $(hostname) =~ 192.168 ]]; then
+# Resolve Python executables: prefer pixi environments if present, then conda, else fallback
+if [[ -x "$scriptDir/.pixi/envs/default/bin/python" ]]; then
+  python_exec1="$scriptDir/.pixi/envs/default/bin/python"
+elif command -v pixi &>/dev/null && pixi info --manifest-path "$scriptDir/pixi.toml" &>/dev/null; then
+  python_exec1="$(pixi info --manifest-path "$scriptDir/pixi.toml" --json 2>/dev/null | grep -o '"/.*\.pixi/envs/default"' | tr -d '"')/bin/python"
+elif [[ $(hostname) =~ 192.168 ]]; then
   python_exec1='/Users/envs/amb22/bin/python'
-else
+elif [[ -x "/public/home/lijunhao/soft/conda_envs/fldev/bin/python" ]]; then
   python_exec1='/public/home/lijunhao/soft/conda_envs/fldev/bin/python'
-  python_exec2='/public/home/lijunhao/soft/conda_envs/p4dev/bin/python'
+else
+  python_exec1="$(which python3)"
 fi
+
+if [[ -x "$scriptDir/.pixi/envs/p4dev/bin/python" ]]; then
+  python_exec2="$scriptDir/.pixi/envs/p4dev/bin/python"
+elif command -v pixi &>/dev/null && pixi info --manifest-path "$scriptDir/pixi.toml" &>/dev/null; then
+  python_exec2="$(pixi info --manifest-path "$scriptDir/pixi.toml" --json 2>/dev/null | grep -o '"/.*\.pixi/envs/p4dev"' | tr -d '"')/bin/python"
+elif [[ $(hostname) =~ 192.168 ]]; then
+  python_exec2='/Users/envs/amb22/bin/python'
+elif [[ -x "/public/home/lijunhao/soft/conda_envs/p4dev/bin/python" ]]; then
+  python_exec2='/public/home/lijunhao/soft/conda_envs/p4dev/bin/python'
+else
+  python_exec2="$(which python3)"
+fi
+
 
 new_inp=${inp_file%.*}_opt.pdb
 mkdir -p $chargeDir

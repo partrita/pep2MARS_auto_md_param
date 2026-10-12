@@ -1,4 +1,4 @@
-#!/public/home/lijunhao/soft/conda_envs/p4dev/bin/python
+#!/usr/bin/env python3
 #https://github.com/cdsgroup/resp/tree/master/examples
 # ESP/RESP/BCC charge fitting and Amber force field file generation
 # resp package need to be patched (in the p4env)

@@ -1,4 +1,4 @@
-#!/public/home/lijunhao/soft/conda_envs/fldev/bin/python
+#!/usr/bin/env python3
 # The pdb file feeded to this step should have unified residue names and atom names!
 # The input must be a prepared complex with all hydrogen atoms!
 # for the pari, triple, and quartet, need to know if there are ligand inside!

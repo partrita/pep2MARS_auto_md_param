@@ -1,4 +1,4 @@
-#!/public/home/lijunhao/soft/conda_envs/fldev/bin/python
+#!/usr/bin/env python3
 # protocol to prepare capped blocks for NCAA peptides
 # TODO: Incorparate DNA/RNA capping procedure
   #### use neighboring CONH as caps

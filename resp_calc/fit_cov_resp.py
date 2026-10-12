@@ -1,4 +1,4 @@
-#!/public/home/lijunhao/soft/conda_envs/p4env/bin/python
+#!/usr/bin/env python3
 # A small script to fit the resp charge for covalent system
 # by Junhao Li
 # The input must be a prepared complex with all hydrogen atoms!

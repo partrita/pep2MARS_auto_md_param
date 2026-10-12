@@ -1,4 +1,4 @@
-#!/public/home/lijunhao/soft/conda_envs/p4env/bin/python
+#!/usr/bin/env python3
 #TODO: when the covalent residue is otehrs, like SER,LYS, etc...
 from pymol import cmd
 import sys

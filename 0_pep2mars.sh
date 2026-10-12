@@ -108,6 +108,12 @@ fi
 
 echo "gonna run $hours hours, $minutes minutes"
 
+if [[ -x "$scriptDir/.pixi/envs/default/bin/python" ]]; then
+  pyExec="$scriptDir/.pixi/envs/default/bin/python"
+else
+  pyExec="$(which python3 2>/dev/null || which python)"
+fi
+
 cat > master_worker.sh <<_EOF
 #!/bin/bash
 # Use only 1 CPUs here, because ESP charge will be Sbatch
@@ -125,10 +131,11 @@ set -e
 
 echo Preparing the Amber prmtop and inpcrd files for $pdbName
 
-$(which python) $scriptDir/1_build_system.py "$pdbName" "blank_string" \\
+$pyExec $scriptDir/1_build_system.py "$pdbName" "blank_string" \\
  "$chargeType" "$ff" "$temper" "$waterBox" "$jobTime" "$saltConc"
 
 _EOF
+
 
 sbatch master_worker.sh
 cd $topDir

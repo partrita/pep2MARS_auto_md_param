@@ -1,4 +1,4 @@
-#!/public/home/lijunhao/soft/conda_envs/p4env/bin/python
+#!/usr/bin/env python3
 import sys, os
 from pymol import cmd
 from pymol import stored
